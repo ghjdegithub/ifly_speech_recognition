@@ -132,6 +132,16 @@ class SpeechRecognitionService with _RecordingMixin, _AuthorizationMixin {
 
     if (entity.code == 0) _analysisData(entity.data?.result);
 
+    // 打印 _resultList 调试信息
+    if (_resultList.isEmpty) {
+      debugPrint('_resultList is empty');
+    } else {
+      debugPrint('_resultList length: ${_resultList.length}');
+      for (var i = 0; i < _resultList.length; i++) {
+        debugPrint('_resultList[$i]: ${_resultList[i]?.toString() ?? 'null'}');
+      }
+    }
+
     if (entity.data?.status == 2) {
       // 识别结束
       _isCompleted = true;
