@@ -36,6 +36,8 @@ class SpeechRecognitionService with _RecordingMixin, _AuthorizationMixin {
     disposeRecording();
     _waitingForResultsTimer?.cancel();
     _waitingForResultsTimer = null;
+    _entityController?.close();
+    _entityController = null;
   }
 
   // ---------------- 科大讯飞语音识别 ----------------
@@ -73,6 +75,16 @@ class SpeechRecognitionService with _RecordingMixin, _AuthorizationMixin {
 
   /// 服务器返回的识别结果组
   List<SpeechRecognitionResultDataResult?> _resultList = [];
+
+  /// 服务器返回解析后的完整实体广播控制器
+  StreamController<SpeechRecognitionResultEntity>? _entityController;
+
+  /// 外部订阅：实时获取每条 websocket 返回并解析成功的实体
+  Stream<SpeechRecognitionResultEntity> onRecognitionEntity() {
+    _entityController ??=
+        StreamController<SpeechRecognitionResultEntity>.broadcast();
+    return _entityController!.stream;
+  }
 
   /// 连接科大讯飞服务器
   void _connectSocket() {
@@ -114,6 +126,9 @@ class SpeechRecognitionService with _RecordingMixin, _AuthorizationMixin {
       debugPrint('解析科大讯飞识别数据出错：$e');
       return;
     }
+
+    // 推送解析成功的实体给订阅者
+    _entityController?.sink.add(entity);
 
     if (entity.code == 0) _analysisData(entity.data?.result);
 
